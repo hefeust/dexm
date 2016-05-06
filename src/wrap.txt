@@ -1,0 +1,62 @@
+
+/* UMD */
+(function (root, factory) {
+  if (typeof exports === 'object') {
+    module.exports = factory();
+  } else if (typeof define === 'function' && define.amd) {
+    define([], factory);
+  }
+  else {
+    root['DEXM'] = factory();
+  }
+}(this, function() {
+
+  var machines = {};
+
+  <%= contents %>
+
+  /* API exports */
+  var wrapper = function(name) {
+    var m = machines[name];
+
+    if(!m) {
+      m = machines[name] = new Machine();
+    }
+
+    return {
+      def : function(name) {
+        return m.def(name);
+      },
+
+      go : function(name) {
+        return m.go(name);
+      },
+
+      accept : function(name, args) {
+        return m.accept(name, args);
+      },
+
+      state : function() {
+        return m.state();
+      },
+
+      list : function() {
+        return m.list();
+      },
+
+      allowed : function(other) {
+        return m.allowed(other);
+      },
+
+      forbidden : function(other) {
+        return m.forbidden(other);
+      },
+
+      destroy : function() {
+        delete machines(m);
+      }
+    }
+  }
+
+  return wrapper;
+}));

@@ -1,0 +1,94 @@
+
+body {
+  font-family : Helvetica,Verdana,sans
+}
+
+section {
+  background-color : #bada55;
+  height : 150px;
+  width : 100%;
+}
+
+div.car-lights {
+  float : left;
+  width : 15%;
+}
+
+div.buttons {
+  width : 50%;
+  float : left;
+  height : 100%;
+}
+
+
+div.pedestrian-lights {
+  width : 25%;
+  height : 100%;
+  float : left;
+
+}
+
+
+br.clearfix {
+  width : 0;
+  height : 0;
+  clear : both;
+}
+
+div.car-lights div {
+  width : 80%;
+  height : 80%;
+  background-color : black;
+  color : white;
+  margin : 5%;
+  padding : 5%;
+}
+
+div.buttons button {
+  display : block;
+  width : 80%;
+  height : 30%;
+  padding : 1%;
+  margin : 1%;
+}
+
+div.pedestrian-lights div {
+  float : left;
+  width : 35%;
+  height : 80%;
+  background-color : black;
+  color : white;
+  padding : 3%;
+  margin : 3%;
+}
+
+/* color lights */
+
+div#cl-red.on {
+  background-color : red;
+}
+
+div#cl-orange.on {
+  background-color : orange;
+}
+
+div#cl-green.on {
+  background-color : green;
+}
+
+div#pl-red.on {
+  background-color : red;
+}
+
+div#pl-green.on {
+  background-color : green;
+}
+
+div.buttons button {
+  background-color : blue;
+  color : white;
+}
+
+div.buttons button[disabled] {
+  background-color : #eee;
+}
