@@ -22,7 +22,13 @@ window.onload = function() {
   var machine = DEXM('traffic');
   var blinking_counter = 0;
 
+  function switchon(elm) {
+    elm.setAttribute('class', 'on');
+  }
 
+  function switchoff(elm) {
+    elm.removeAttribute('class');
+  }
 /*
   machine.def('c-green-p-red');
   machine.def('c-orang-p-red');
@@ -32,34 +38,34 @@ window.onload = function() {
   machine.def('c-green-p-red')
     .timeout('c-orange-p-red', 5000)
     .from('*', function() {
-      cl_green.setAttribute('class', 'on');
-      pl_red.setAttribute('class', 'on');
+      switchon(cl_green);
+      switchon(pl_red);
     })
     .to('*', function() {
-      cl_green.removeAttribute('class');
-      pl_red.removeAttribute('class');
+      switchoff(cl_green);
+      switchoff(pl_red);
     });
 
   machine.def('c-orange-p-red')
     .timeout('c-red-p-green', 2000)
     .from('*', function() {
-      cl_orange.setAttribute('class', 'on');
-      pl_red.setAttribute('class', 'on');
+      switchon(cl_orange);
+      switchon(pl_red);
     })
     .to('*', function() {
-      cl_orange.removeAttribute('class');
-      pl_red.removeAttribute('class');
+      switchoff(cl_orange);
+      switchoff(pl_red) ;
     });
 
   machine.def('c-red-p-green')
     .on('cars-go', 'c-green-p-red')
     .timeout('c-red-p-off', 1000)
     .from('c-orange-p-red', function() {
-      cl_red.setAttribute('class', 'on');
+      switchon(cl_red);
       blinking_counter = 0;
     })
     .from('c-red-p-off', function() {
-      pl_green.setAttribute('class', 'on');
+      switchon(pl_green);
       blinking_counter++;
 
       if(blinking_counter === 3) {
@@ -68,8 +74,8 @@ window.onload = function() {
       }
     })
     .to('c-green-p-red', function() {
-      cl_red.removeAttribute('class');
-      pl_green.removeAttribute('class');
+      switchoff(cl_red);
+      switchoff(pl_green);
     });
 
   // C3P0 ?
@@ -81,6 +87,16 @@ window.onload = function() {
     .to('c-red-p-green', function() {
 
     });
+
+    machine.def('lights-on')
+      .timeout('lights-off', 1000)
+      .from('*', function() {
+        switchon(cl_green);
+        switchon(cl_orange);
+        switchon(cl_red);
+        switchon(pl_green);
+        switchon(pl_red);
+      });
 
     machine.def('lights-off')
       .on('start', 'c-red-p-green')
@@ -124,5 +140,5 @@ window.onload = function() {
   // handleEvent(, 'click', stopHandler);
   //handleEvent(maintenance, 'click', maintenanceHandler);
   console.log('init...');
-  machine.go('lights-off');
+  machine.go('lights-on');
 };

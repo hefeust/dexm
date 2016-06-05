@@ -1,6 +1,6 @@
 {
   "name" : "DEXM",
   "author" : "hefeust <francortes1977@gmail.com>",
-  "description" : "Deus Ex Machina! Finite State Machine",
+  "description" : "Deus Ex Machina! Time-Embedding Finite State Machine",
   "version" : "0.1"
 }

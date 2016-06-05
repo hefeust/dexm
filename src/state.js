@@ -79,9 +79,17 @@ State.prototype.to = function(dest, callback) {
  * @param {String} eventName
  * @param {Number} delay in milliseconds
  */
-State.prototype.timeout = function(destName, delay) {
+State.prototype.timeout = function(dest, delay) {
+/*
   this.delayed = {
     destName : destName,
+    delay : delay
+  };
+*/
+  this.table[null] = {
+    event : "#TIMED#",
+    dest : dest,
+    callback : function timed() { return true; },
     delay : delay
   };
 };
@@ -118,7 +126,7 @@ State.prototype.succ = function(eventName) {
   if(this.table.hasOwnProperty(eventName)) {
     destName = this.table[eventName ].dest;
   }
-  console.log('=== '  + destName);
+  // console.log('=== '  + destName);
 
   return destName;
 };

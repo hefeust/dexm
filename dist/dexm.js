@@ -1,4 +1,5 @@
 
+/* UMD */
 (function (root, factory) {
   if (typeof exports === 'object') {
     module.exports = factory();
@@ -22,8 +23,9 @@ function Machine(options) {
   this.defs = {};
   this.current = null;
   this.old = null;
-  this.timer = null;
-  this.oldTimer = null;
+  //this.timer = new Timer(options);
+  this.scheduler = new Scheduler(options);
+  // this.oldTimer();
   this.options = options || {};
 }
 
@@ -140,46 +142,41 @@ Machine.prototype.forbidden = function(other) {
  *
  * @param {String} name
  */
-Machine.prototype.go = function(destName, data) {
-  console.log('GO :' + destName );
+ Machine.prototype.go = function(destName, data) {
+   console.log('GO :' + destName );
 
-  var self = this;
-  var src = this.defs[this.current];
-  var dest = this.defs[destName];
+   var self = this;
+   var src = this.defs[this.current];
+   var dest = this.defs[destName];
+  var timedDest = null;
 
-  if(!dest) {
-    throw new Error('Undefined destination state : ' + destName);
-  }
+   if(!dest) {
+     throw new Error('Undefined destination state : ' + destName);
+   }
 
-
-  if(src) {
-    src.leave(destName, data);
-  }
-
-  this.old = this.current;
-  this.oldTimer = this.timer;
-  this.current = destName;
-  dest.enter(this.old, data);
+   if(src) {
+     src.leave(destName, data);
+   }
 
 
+   this.old = this.current;
+   // this.oldTimer = this.timer;
+   this.current = destName;
+   dest.enter(this.old, data);
 
-    if(this.oldTimer) {
-      console.log('DELAY CLEARED');
-      clearTimeout(this.oldTimer);
-    }
+   if(dest.table[null]) {
+     timedDest = dest.table[null];
+     console.log('DELAYED : ' + timedDest.delay);
 
-  if(dest.delayed) {
-    console.log('DELAYED : ' + dest.delayed.delay);
-    this.timer = setTimeout(function() {
-      console.log('DELAYED GO');
-      self.go(dest.delayed.destName);
-    }, dest.delayed.delay);
-    console.log('---------------------------');
-  }
+     this.scheduler.plan(function _plan() {
+       self.go(timedDest.dest);
+     }, timedDest.delay);
 
+     this.scheduler.start();
+   }
 
-  return true;
-};
+   return true;
+ };
 
 /**
  * accept an event on input
@@ -198,6 +195,67 @@ Machine.prototype.accept = function(eventName, data) {
   test = this.go(destName, data);
 
   return test;
+};
+
+
+/**
+ * TIME SCHEDULER CLASS
+ *
+ * @constructor {Scheduler}
+ * @param {Object} options
+ */
+function Scheduler(options) {
+  options = options || {};
+  // this.planned = [];
+  this.planned = null;
+  // this.timer = null;
+  this.tickDelay = options.tickDelay || 100;
+  this.timeTolerance = options.timeTolerance || 10;
+  this.tickCount = 0;
+}
+
+/**
+ * add a planned task
+ *
+ * @param {Function} callback
+ * @param {Number} delay in milliseconds
+ */
+Scheduler.prototype.plan = function(cb, delay) {
+  var dtc = Math.floor(delay / this.tickDelay);
+
+  if(this.planned) {
+    dtc += this.planned.tickCount;
+  }
+
+  this.planned = {
+    cb : cb,
+    delay : delay,
+    tickCount : dtc
+  };
+};
+
+/**
+ * start the scheduler
+ *
+ */
+Scheduler.prototype.start = function() {
+  var self = this;
+
+  if(this.timer) { return true; }
+
+  if(!this.planned) { return true; }
+
+  this.timer = setInterval(function _tick() {
+    self.tickCount++;
+    console.log(self.tickCount);
+    if(self.planned.tickCount === self.tickCount) {
+      console.log("test : " + self.planned.tickCount);
+      self.planned.cb();
+    }
+
+  }, this.tickDelay);
+
+  return true;
 };
 
 
@@ -281,9 +339,17 @@ State.prototype.to = function(dest, callback) {
  * @param {String} eventName
  * @param {Number} delay in milliseconds
  */
-State.prototype.timeout = function(destName, delay) {
+State.prototype.timeout = function(dest, delay) {
+/*
   this.delayed = {
     destName : destName,
+    delay : delay
+  };
+*/
+  this.table[null] = {
+    event : "#TIMED#",
+    dest : dest,
+    callback : function timed() { return true; },
     delay : delay
   };
 };
@@ -320,7 +386,7 @@ State.prototype.succ = function(eventName) {
   if(this.table.hasOwnProperty(eventName)) {
     destName = this.table[eventName ].dest;
   }
-  console.log('=== '  + destName);
+  // console.log('=== '  + destName);
 
   return destName;
 };
@@ -360,6 +426,7 @@ State.prototype.leave = function(destName, data) {
 };
 
 
+  /* API exports */
   var wrapper = function(name) {
     var m = machines[name];
 

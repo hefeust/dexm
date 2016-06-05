@@ -8,8 +8,9 @@ function Machine(options) {
   this.defs = {};
   this.current = null;
   this.old = null;
-  this.timer = null;
-  this.oldTimer = null;
+  //this.timer = new Timer(options);
+  this.scheduler = new Scheduler(options);
+  // this.oldTimer();
   this.options = options || {};
 }
 
@@ -126,46 +127,41 @@ Machine.prototype.forbidden = function(other) {
  *
  * @param {String} name
  */
-Machine.prototype.go = function(destName, data) {
-  console.log('GO :' + destName );
+ Machine.prototype.go = function(destName, data) {
+   console.log('GO :' + destName );
 
-  var self = this;
-  var src = this.defs[this.current];
-  var dest = this.defs[destName];
+   var self = this;
+   var src = this.defs[this.current];
+   var dest = this.defs[destName];
+  var timedDest = null;
 
-  if(!dest) {
-    throw new Error('Undefined destination state : ' + destName);
-  }
+   if(!dest) {
+     throw new Error('Undefined destination state : ' + destName);
+   }
 
-
-  if(src) {
-    src.leave(destName, data);
-  }
-
-  this.old = this.current;
-  this.oldTimer = this.timer;
-  this.current = destName;
-  dest.enter(this.old, data);
+   if(src) {
+     src.leave(destName, data);
+   }
 
 
+   this.old = this.current;
+   // this.oldTimer = this.timer;
+   this.current = destName;
+   dest.enter(this.old, data);
 
-    if(this.oldTimer) {
-      console.log('DELAY CLEARED');
-      clearTimeout(this.oldTimer);
-    }
+   if(dest.table[null]) {
+     timedDest = dest.table[null];
+     console.log('DELAYED : ' + timedDest.delay);
 
-  if(dest.delayed) {
-    console.log('DELAYED : ' + dest.delayed.delay);
-    this.timer = setTimeout(function() {
-      console.log('DELAYED GO');
-      self.go(dest.delayed.destName);
-    }, dest.delayed.delay);
-    console.log('---------------------------');
-  }
+     this.scheduler.plan(function _plan() {
+       self.go(timedDest.dest);
+     }, timedDest.delay);
 
+     this.scheduler.start();
+   }
 
-  return true;
-};
+   return true;
+ };
 
 /**
  * accept an event on input
