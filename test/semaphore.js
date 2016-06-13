@@ -1,42 +1,58 @@
 
+function handleClick(elm, cb) {
+  if(window.attachEvent) {
+    elm.attachEvent("click", cb);
+  } else {
+    elm.addEventListener("click", cb, true);
+  }
+}
+
+function switchon(elm) {
+  elm.setAttribute('class', 'on');
+}
+
+function switchoff(elm) {
+  elm.removeAttribute('class');
+}
 
 window.onload = function() {
+  var pl_green = document.getElementById("pl-green"),
+    pl_red = document.getElementById("pl-red"),
+    cl_green = document.getElementById("cl-green"),
+    cl_orange = document.getElementById("cl-orange"),
+    cl_red = document.getElementById("cl-red"),
+    bt_power = document.getElementById("bt-power");
 
-  console.log('Deus Ex Machina !');
+  console.log([pl_red, pl_green, cl_red, cl_green, cl_orange]);
 
-  // cars
-  var cl_red = document.getElementById('cl-red'),
-    cl_orange = document.getElementById('cl-orange'),
-    cl_green = document.getElementById('cl-green');
+  var machine = DEXM('traffic-lights');
+  var blinking = 0;
 
-  // buttons
-  var bt_power = document.getElementById('bt-power'),
-    bt_down = document.getElementById('bt-maintenace'),
-    bt_call = document.getElementById('bt-call');
+    // lights off
+  machine.def('C0P0')
+    .timeout('C3P0', 1000)
+    .from('*', function() {
+      switchoff(pl_green);
+      switchoff(pl_red);
+      switchoff(cl_green);
+      switchoff(cl_orange);
+      switchoff(cl_red);
+    });
 
-  // pedestrian lights
-  var pl_red = document.getElementById('pl-red'),
-    pl_green = document.getElementById('pl-green');
+  // lights all on
+  machine.def('CXPX')
+    .timeout('C0P0', 500)
+    .from('*', function() {
+      switchon(pl_green);
+      switchon(pl_red);
+      switchon(cl_green);
+      switchon(cl_orange);
+      switchon(cl_red);
+   });
 
-  // the finite state machine
-  var machine = DEXM('traffic');
-  var blinking_counter = 0;
-
-  function switchon(elm) {
-    elm.setAttribute('class', 'on');
-  }
-
-  function switchoff(elm) {
-    elm.removeAttribute('class');
-  }
-/*
-  machine.def('c-green-p-red');
-  machine.def('c-orang-p-red');
-  machine.def('c-red-p-green');
-  machine.def('c-red-p-off'); // @see C3P0 ?
-*/
-  machine.def('c-green-p-red')
-    .timeout('c-orange-p-red', 5000)
+  // cars green, pedestrian red all on
+  machine.def('C1P3')
+    .timeout('C2P3', 2000)
     .from('*', function() {
       switchon(cl_green);
       switchon(pl_red);
@@ -46,99 +62,61 @@ window.onload = function() {
       switchoff(pl_red);
     });
 
-  machine.def('c-orange-p-red')
-    .timeout('c-red-p-green', 2000)
+  // cars orange, pedestrian red
+  machine.def('C2P3')
+    .timeout('C3P1', 1000)
     .from('*', function() {
-      switchon(cl_orange);
-      switchon(pl_red);
+      switchon('cl_orange');
+      switchon('pl_red');
     })
     .to('*', function() {
-      switchoff(cl_orange);
-      switchoff(pl_red) ;
+      switchoff('cl_orange');
+      switchoff('pl_red');
     });
 
-  machine.def('c-red-p-green')
-    .on('cars-go', 'c-green-p-red')
-    .timeout('c-red-p-off', 1000)
-    .from('c-orange-p-red', function() {
-      switchon(cl_red);
-      blinking_counter = 0;
-    })
-    .from('c-red-p-off', function() {
-      switchon(pl_green);
-      blinking_counter++;
 
-      if(blinking_counter === 3) {
-        blinking_counter = 0;
-        machine.accept('cars-go');
-      }
+
+  // cars red, pedestrian green
+  machine.def('C3P1')
+    .timeout('C3P0', 3000)
+    .from('*', function() {
+      switchon(cl_red);
+      switchon(pl_green);
     })
-    .to('c-green-p-red', function() {
+    .to('*', function() {
       switchoff(cl_red);
       switchoff(pl_green);
     });
 
-  // C3P0 ?
-  machine.def('c-red-p-off')
-    .timeout('c-red-p-green', 1000)
-    .from('c-red-p-green', function() {
-      pl_green.removeAttribute('class', 'on');
+  // car red pedestrian off
+  machine.def('C3P0')
+    .timeout('C3P9', 500)
+    .from('*', function() {
+      switchon(cl_red);
     })
-    .to('c-red-p-green', function() {
-
+    .to('*', function() {
+      switchoff(cl_red);
     });
 
-    machine.def('lights-on')
-      .timeout('lights-off', 1000)
-      .from('*', function() {
-        switchon(cl_green);
-        switchon(cl_orange);
-        switchon(cl_red);
-        switchon(pl_green);
-        switchon(pl_red);
-      });
+  // car red pedestrian on
+    machine.def('C3P9')
+    .timeout('C3P0', 500)
+    .from('*', function() {
+      switchon(cl_red);
+      blinking++;
+      if(blinking === 2) {
+        blinking = 0;
+        machine.go('C1P3');
+      }
+    })
+    .to('*', function() {
+      switchoff(cl_red);
+      //switchoff(cl_green);
+    });
 
-    machine.def('lights-off')
-      .on('start', 'c-red-p-green')
-      .from('*', function() {
-        cl_green.removeAttribute('class');
-        cl_orange.removeAttribute('class');
-        cl_red.removeAttribute('class');
-        pl_green.removeAttribute('class');
-        pl_red.removeAttribute('class');
-        bt_call.setAttribute('disabled', 'true');
-      })
-      .to('c-red-p-green', function() {
-        bt_call.removeAttribute('disabled');
-      });
+  handleClick(bt_power, function() {
+    machine.go('CXPX');
+  });
 
-
-
-  function handleEvent(elm, evt, cb) {
-    if(elm.attachEvent) {
-      elm.attachEvent(evt, cb);
-    } else {
-      elm.addEventListener(evt, cb, false);
-    }
-  }
-
-  function powerHandler() {
-    console.log('activating');
-    machine.accept('start');
-  }
-
-  function stopHandler() {
-    machine.go('stop');
-  }
-
-  function maintenanceHandler() {
-    machine.go('blink-off');
-  }
-
-  // listeners
-  handleEvent(bt_power, 'click', powerHandler);
-  // handleEvent(, 'click', stopHandler);
-  //handleEvent(maintenance, 'click', maintenanceHandler);
-  console.log('init...');
-  machine.go('lights-on');
+  machine.go('C0P0');
 };

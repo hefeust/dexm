@@ -2,19 +2,28 @@
 DEXM : Deux Ex Machina !
 ========================
 
+DEXM (Deus EX Machina) is a TEFSM (Time Embeded Finite State Machine) implementation.
+
 Installation
 ------------
 
 just include dist/dexm.js in your page
-- or -
-load it via AMD (Require JS) or CommonJS + browserify
+
+-- or --
+
+load it via UMD (Require JS) or CommonJS + browserify.
 
 Creating a finite State Machine
 -------------------------------
 
 Just invoke the factory method with a name for your FSM and eventually options
 
-    var m1 = DEXM('my-machine' /*,  option */);
+    var m1 = DEXM('my-machine' /*,  options */);
+
+The second parameter 'options' is a ket/value pairs object :
+
+* tickDelay : default 100 milliseconds
+* timeTolerance : default 10 milliseconds
 
 Defining states and transitions
 -------------------------------
@@ -71,7 +80,7 @@ Sometime you may want to achieve a transition after a certain time delay, use in
       .from(['s1', 's2'], function() { ... })
       .to('*'], function() { ... });
 
-This behavior is backed of course, with setTimout and clearTimeout of the window object.
+This behavior is backed, of course, with setInterval and clearInterval of the window object.
 
 Enjoy !
 
@@ -82,4 +91,4 @@ TODO
 * halt method for time scheduled transitions
 * add internal stack for basic compiling purposes
 * hierarchical FSM def('...').sub(another_fsm)
-* test, test & retest
+* test, test & retest (the traffic lights demo)
