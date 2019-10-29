@@ -52,7 +52,7 @@ initialize with "go", then call "accept" :
     m1.accept('a');
     m1.accept('b');
 
-Tranductions
+Transductions
 ------------
 
 Those are custom actions triggered on entering and on leaving a given state, just use "from" and "to" methods at definition time :
